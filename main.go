@@ -1,8 +1,8 @@
-
 package main
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 )
@@ -50,6 +50,7 @@ func (r *RingIntBuffer) Get() []int {
 func writeToBuffer(currentChan <-chan int, r *RingIntBuffer) {
 	for number := range currentChan {
 		r.Push(number)
+		log.Print("Number added to buffer:", number)
 	}
 }
 
@@ -58,6 +59,7 @@ func writeToConsole(r *RingIntBuffer, t *time.Ticker) {
 		buffer := r.Get()
 		if len(buffer) > 0 {
 			fmt.Println("Получены следующие данные:", buffer)
+			log.Print("Numbers received from buffer:", buffer)
 		}
 	}
 }
@@ -73,9 +75,12 @@ func main() {
 				if i >= 0 {
 					select {
 					case noNegStream <- i:
+						log.Print("Number is not negative:", i)
 					case <-done:
 						return
 					}
+				} else {
+					log.Print("Negative number filtered:", i)
 				}
 			}
 		}()
@@ -92,10 +97,15 @@ func main() {
 					if i > 0 {
 						select {
 						case onlyThreeStream <- i:
+							log.Print("Number is a multiple of 3 and doesn't equal 0:", i)
 						case <-done:
 							return
 						}
+					} else {
+						log.Print("Number equals 0, filtered:", i)
 					}
+				} else {
+					log.Print("Number is not a multiple of 3, filtered:", i)
 				}
 			}
 		}()
@@ -127,12 +137,15 @@ func main() {
 
 // функция чтения из консоли
 func read(input chan<- int) {
+	log.Print("Pipeline launched")
 	for {
 		var num int
 		_, err := fmt.Scanf("%d\n", &num)
 		if err != nil {
 			fmt.Println("Введены неверные данные")
+			log.Print("Wrong data type")
 		} else {
+			log.Print("Nuber received:", num)
 			input <- num
 		}
 	}
