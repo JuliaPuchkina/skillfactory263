@@ -1,3 +1,3 @@
-module 263
+module pipeline
 
 go 1.13
